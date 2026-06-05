@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Anthropic",
+    "url": "https://www.anthropic.com/engineering/feed.xml",
+    "category": "tech-engineering"
+  },
+  {
+    "name": "Krebs on Security",
+    "url": "https://krebsonsecurity.com/feed/",
+    "category": "security"
+  },
+  {
+    "name": "The Hacker News",
+    "url": "https://feeds.feedburner.com/TheHackersNews",
+    "category": "security"
+  },
+  {
+    "name": "Hacker News",
+    "url": "https://hnrss.org/frontpage",
+    "category": "tech"
+  },
+  {
+    "name": "Bleeping Computer",
+    "url": "https://www.bleepingcomputer.com/feed/",
+    "category": "security"
+  }
+]
