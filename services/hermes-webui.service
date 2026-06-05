@@ -1,0 +1,19 @@
+[Unit]
+Description=Hermes WebUI - Browser Interface for Hermes Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=HERMES_WEBUI_HOST=127.0.0.1
+Environment=HERMES_WEBUI_PORT=8787
+Environment=HERMES_WEBUI_STATE_DIR=%h/.hermes/webui
+Environment=HERMES_WEBUI_DEFAULT_WORKSPACE=%h/vault
+Environment=OBSIDIAN_VAULT_PATH=%h/vault
+WorkingDirectory=%h/hermes-webui
+ExecStart=%h/.hermes/hermes-agent/venv/bin/python %h/hermes-webui/server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

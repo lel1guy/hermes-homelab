@@ -1,0 +1,25 @@
+[Unit]
+Description=Hermes Agent Gateway - Messaging Platform Integration
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/home/*/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main gateway run --replace
+WorkingDirectory=/home/*/.hermes
+Environment="PATH=/home/*/.hermes/hermes-agent/venv/bin:<additional_paths>"
+Environment="VIRTUAL_ENV=/home/*/.hermes/hermes-agent/venv"
+Environment="HERMES_HOME=/home/*/.hermes"
+Restart=always
+RestartSec=5
+RestartMaxDelaySec=300
+KillMode=mixed
+KillSignal=SIGTERM
+ExecReload=/bin/kill -USR1 $MAINPID
+TimeoutStopSec=210
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

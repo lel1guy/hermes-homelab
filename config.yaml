@@ -1,0 +1,146 @@
+# Hermes Agent Configuration
+
+> **⚠️ Redacted for public reference.**
+> API keys, tokens, and secrets replaced with `<redacted>` or environment variable references.
+> Actual values live in `~/.hermes/.env` and are never committed.
+
+```yaml
+# ── Model ──────────────────────────────────────────────────────
+model:
+  default: deepseek-v4-flash
+  provider: deepseek
+
+# ── Agent ──────────────────────────────────────────────────────
+agent:
+  max_turns: 150
+  gateway_timeout: 1800
+  api_max_retries: 3
+  tool_use_enforcement: auto
+  task_completion_guidance: true
+  environment_probe: true
+  reasoning_effort: medium
+  clarify_timeout: 600
+  gateway_notify_interval: 180
+  gateway_auto_continue_freshness: 3600
+
+# ── Personalities ──────────────────────────────────────────────
+# Available: helpful, concise, technical, creative, teacher,
+#   kawaii, catgirl, pirate, shakespeare, surfer, noir,
+#   uwu, philosopher, hype
+
+# ── Terminal ───────────────────────────────────────────────────
+terminal:
+  backend: local
+  cwd: /home/*/vault
+  timeout: 180
+  persistent_shell: true
+
+# ── Web Search ─────────────────────────────────────────────────
+web:
+  backend: ddgs
+
+# ── Browser ────────────────────────────────────────────────────
+browser:
+  inactivity_timeout: 120
+  engine: auto
+
+# ── Memory ─────────────────────────────────────────────────────
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  provider: hindsight
+  memory_char_limit: 2200
+  user_char_limit: 1375
+  nudge_interval: 10
+  flush_min_turns: 6
+
+# ── Delegation ─────────────────────────────────────────────────
+delegation:
+  max_iterations: 50
+  child_timeout_seconds: 600
+  max_concurrent_children: 3
+
+# ── Skills ─────────────────────────────────────────────────────
+skills:
+  external_dirs: '["/home/*/vault/_hermes/Skills"]'
+  template_vars: true
+
+# ── Discord ────────────────────────────────────────────────────
+discord:
+  require_mention: true
+  free_response_channels:
+    - home             # Hermes chat — auto-replies to everything
+    - wiki-ingest      # Wiki content channel
+    - inbox            # Knowledge capture channel
+  auto_thread: true
+  reactions: true
+  channel_prompts:
+    wiki-ingest: "Process posted content → Wiki or Knowledge"
+    inbox: "Analyze posted content → file to appropriate vault folder"
+    dev: "Focus on technical answers. Be concise."
+    announcements: "Read-only — daily summaries, cron outputs"
+    hermes-chat: "Free-response — auto-reply without @mention"
+    sys-admin: "Read-only — system health reports"
+    logbook: "Read-only — vault change logs"
+
+# ── Webhook (n8n integration) ──────────────────────────────────
+platforms:
+  webhook:
+    enabled: true
+    extra:
+      host: 0.0.0.0
+      port: 8644
+
+# ── Dashboard ──────────────────────────────────────────────────
+dashboard:
+  theme: default
+  basic_auth:
+    username: "kaido-dt"
+
+# ── Voice / TTS ────────────────────────────────────────────────
+tts:
+  provider: edge
+  edge:
+    voice: en-US-AriaNeural
+
+# ── Sessions ───────────────────────────────────────────────────
+sessions:
+  auto_prune: false
+  retention_days: 90
+
+# ── Security ───────────────────────────────────────────────────
+security:
+  redact_secrets: true
+  tirith_enabled: true
+  tirith_path: tirith
+
+# ── MCP Servers ────────────────────────────────────────────────
+mcp_servers:
+  codegraph:
+    command: codegraph
+    args: ["serve", "--mcp"]
+    enabled: true
+  github:
+    url: "https://api.githubcopilot.com/mcp/"
+    headers:
+      Authorization: "Bearer ${MCP_GITHUB_TOKEN}"
+    enabled: true
+
+# ── Fallback Model ─────────────────────────────────────────────
+# Uncomment to enable:
+# fallback_model:
+#   provider: openrouter
+#   model: anthropic/claude-sonnet-4
+```
+
+## Key Configuration Decisions
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `agent.max_turns` | 150 | Long-running tasks need room to iterate |
+| `sessions.auto_prune` | `false` | Never lose conversation history |
+| `discord.free_response_channels` | 3 channels | Hermes auto-replies in ops channels without @mention |
+| `discord.auto_thread` | `true` | Every message spawns a thread — keeps discussions organized |
+| `terminal.cwd` | vault | Default working directory is the Obsidian vault |
+| `skills.external_dirs` | vault Skills/ | Skills from vault mirror are auto-discovered |
+| `memory.memory_enabled` | `true` | Persistent cross-session memory |

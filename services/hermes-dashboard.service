@@ -1,0 +1,14 @@
+[Unit]
+Description=Hermes Dashboard - Remote Backend for Desktop App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.hermes/.env
+ExecStart=%h/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main dashboard --no-open --host 0.0.0.0 --port 9119
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
