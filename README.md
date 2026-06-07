@@ -1,10 +1,12 @@
-# Hermes Homelab 🏠🤖
+# 🏠🤖 Kakurega Sector — Hermes Homelab
 
-**Production-grade AI agent infrastructure running on a Fedora Linux homelab.**
+> The AI agent infrastructure running my homelab from Quarteira, Algarve 🇵🇹
 
-This repository documents my **Hermes Agent** setup — a self-hosted AI assistant that manages my Obsidian knowledge vault, monitors system health, integrates with Discord for operations, and runs automated pipelines via cron. It's the brain behind **Kakurega Sector** (`KAIDO-01`), my personal homelab.
+Built by [@lel1guy](https://github.com/lel1guy) — always tinkering, always learning.
 
-> **What recruiters will see:** A homelab running a production AI agent with real Discord ops, automated knowledge management pipelines, systemd-managed services, and Python automation — demonstrating Linux sysadmin, infrastructure-as-code, Python scripting, and operational monitoring skills.
+---
+
+This repo documents my **Hermes Agent** setup — a self-hosted AI assistant that manages my Obsidian knowledge vault, monitors system health, integrates with Discord for operations, and runs automated pipelines via cron. Everything runs on **KAIDO-01**, my Fedora Linux homelab server.
 
 ---
 
@@ -21,8 +23,8 @@ This repository documents my **Hermes Agent** setup — a self-hosted AI assista
 │  └────────┬─────────┘     └────────┬─────────┘              │
 │           │                        │                        │
 │  ┌────────▼────────────────────────▼──────────────────┐     │
-│  │              Hermes Agent (DeepSeek V4)             │     │
-│  │  • 14 cron jobs • 12 custom scripts • 900+ skills  │     │
+│  │              Hermes Agent (DeepSeek V4 Flash)      │     │
+│  │  • ~20 cron jobs • 12 custom scripts • 900+ skills │     │
 │  │  • Obsidian vault bridge • Persistent memory       │     │
 │  └────────┬────────────────────────────┬──────────────┘     │
 │           │                            │                     │
@@ -40,26 +42,26 @@ This repository documents my **Hermes Agent** setup — a self-hosted AI assista
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## ✨ Features
+## ✨ What It Does
 
-| Category | Details |
-|----------|---------|
-| **🤖 AI Agent** | Hermes Agent (Nous Research) — DeepSeek V4 Flash, 150 max turns, persistent memory |
-| **💬 Discord Ops** | Free-response channels, channel-specific prompts, threaded conversations, automatic reactions |
-| **⏰ Cron Automation** | 14 scheduled jobs — vault backup, wiki ingest, morning briefings, RSS feeds, system health, study reminders |
-| **📜 Custom Scripts** | 12 Python/bash scripts for vault session export, task processing, inbox management, Syncthing monitoring |
+| What | How |
+|------|-----|
+| **🤖 AI Agent** | Hermes Agent (Nous Research) — DeepSeek V4 Flash, persistent memory, 150 max turns |
+| **💬 Discord Ops** | Free-response channels, per-channel prompts, threaded convos, auto-reactions |
+| **⏰ Cron Automation** | ~20 scheduled jobs — vault backups, wiki ingest, morning briefings, RSS, system health, study reminders |
+| **📜 Custom Scripts** | 12 Python/bash scripts for session export, inbox management, task processing, backup, sync monitoring |
 | **📚 Knowledge Mgmt** | Obsidian vault with automated wiki ingest, daily note processing, inbox pipeline, session archiving |
-| **🔧 Systemd Services** | 3 user services with auto-restart, graceful shutdown, health monitoring |
-| **🔗 Integrations** | Discord, n8n webhook, Google Workspace (Gmail/Calendar/Drive), Tailscale, Syncthing |
-| **🧠 Skills Library** | 900+ skills (cybersecurity, devops, creative, research, coding) auto-synced from community repos |
+| **🔧 Systemd Services** | 3 user services with auto-restart and graceful shutdown |
+| **🔗 Integrations** | Discord, n8n webhook, Google Workspace, Tailscale, Syncthing |
+| **🧠 Skills Library** | 900+ skills (cybersecurity, devops, creative, coding) auto-synced from community repos |
 
-## 📂 Repository Structure
+## 📂 What's in Here
 
 ```
 hermes-homelab/
 ├── README.md                    # You are here
 ├── config.yaml                  # Hermes Agent config (secrets redacted)
-├── SOUL.md                      # Agent persona definition
+├── SOUL.md                      # Agent personality definition
 ├── services/                    # Systemd user service files
 │   ├── hermes-gateway.service
 │   ├── hermes-webui.service
@@ -87,54 +89,26 @@ hermes-homelab/
     └── AGENTS.md                # Vault organization rules
 ```
 
-## 🚀 Getting Started
-
-This is a **reference setup** — you don't just clone and run (it's deeply tied to my homelab). But if you want to use Hermes Agent yourself:
-
-1. **Install Hermes**: Follow the [official docs](https://hermes-agent.nousresearch.com/docs)
-2. **Configure**: Copy `config.yaml` as a starting template, fill in your own API keys
-3. **Add services**: Copy systemd files, adjust paths
-4. **Set up vault**: Use `vault-structure/AGENTS.md` as a template for your knowledge management
-5. **Deploy scripts**: Adapt the Python scripts to your paths
-
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
+| Layer | What I Use |
 |-------|-----------|
 | **OS** | Fedora Linux 44 |
 | **AI Agent** | [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) |
-| **LLM** | DeepSeek V4 Flash (via DeepSeek API) |
+| **LLM** | DeepSeek V4 Flash |
 | **Vault** | Obsidian (Syncthing-synced) |
 | **Automation** | n8n, cron, custom Python/bash |
 | **Networking** | Tailscale (mesh VPN) |
 | **Orchestration** | systemd (user services) |
 | **Platform** | Discord, webhook |
 
-## 📊 Key Metrics
-
-- **900+** installed skills (755 cybersecurity) — synced from community repositories
-- **14** automated cron jobs running daily/weekly
-- **3** systemd services with auto-restart
-- **12** custom Python/bash automation scripts
-- **1** Obsidian vault with wiki, projects, daily notes, and inbox pipeline
-
-## 🔒 Security Notes
+## 🔒 Security
 
 - All API keys, tokens, and secrets are **redacted** from this repo
-- The `.env` file and credential stores are **never committed**
+- `.env` and credential stores are **never committed**
 - `config.yaml` is a reference template — actual secrets use environment variables
 - Private vault content is excluded
 
-## 📸 In Action
-
-> *The Hermes Dashboard showing system status and conversation history.*
-> *Automated morning briefings delivered to Discord.*
-> *Wiki pages auto-ingested from YouTube videos and web articles.*
-
-## 📝 License
-
-MIT — Feel free to use this as inspiration for your own setup.
-
 ---
 
-*Built by [@lel1guy](https://github.com/lel1guy) — always tinkering, always learning.*
+*Built from scratch, running 24/7 in a closet in Quarteira. Started as "let's see if I can make this work" and turned into the backbone of my digital life.*
