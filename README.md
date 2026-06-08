@@ -1,114 +1,87 @@
-# 🏠🤖 Kakurega Sector — Hermes Homelab
+# Last Bastion
 
-> The AI agent infrastructure running my homelab from Quarteira, Algarve 🇵🇹
+> A post-apocalyptic medieval fantasy idle game built in Godot 4.x.
+> My second game -- first Godot project built from scratch, no tutorials.
 
-Built by [@lel1guy](https://github.com/lel1guy) — always tinkering, always learning.
-
----
-
-This repo documents my **Hermes Agent** setup — a self-hosted AI assistant that manages my Obsidian knowledge vault, monitors system health, integrates with Discord for operations, and runs automated pipelines via cron. Everything runs on **KAIDO-01**, my Fedora Linux homelab server.
+Built by [@lel1guy](https://github.com/lel1guy) from Quarteira, Algarve, Portugal
 
 ---
 
-## 🏗️ Architecture
+## The World
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                      KAIDO-01 (Fedora Linux)                 │
-│                                                              │
-│  ┌──────────────────┐     ┌──────────────────┐              │
-│  │  Hermes Gateway   │     │   Hermes Web UI   │              │
-│  │  (Discord ops)    │     │   (Browser GUI)   │              │
-│  │  :systemd service │     │   :8787           │              │
-│  └────────┬─────────┘     └────────┬─────────┘              │
-│           │                        │                        │
-│  ┌────────▼────────────────────────▼──────────────────┐     │
-│  │              Hermes Agent (DeepSeek V4 Flash)      │     │
-│  │  • ~20 cron jobs • 12 custom scripts • 900+ skills │     │
-│  │  • Obsidian vault bridge • Persistent memory       │     │
-│  └────────┬────────────────────────────┬──────────────┘     │
-│           │                            │                     │
-│  ┌────────▼────────┐        ┌─────────▼──────────┐         │
-│  │  Obsidian Vault  │        │   n8n Webhook      │         │
-│  │  (Knowledge Mgmt)│        │   (Automation)      │         │
-│  └─────────────────┘        └────────────────────┘         │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐    │
-│  │  Systemd Services                                   │    │
-│  │  • hermes-gateway.service  (Discord/API gateway)    │    │
-│  │  • hermes-webui.service    (Browser interface)      │    │
-│  │  • hermes-dashboard.service (Remote backend)        │    │
-│  └──────────────────────────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────┘
-```
+The world has collapsed. Civilization is in ruins, overrun by skeletons, zombies, orcs, and demons. You are the **last bastion** -- managing a crumbling stronghold, scavenging for scraps, farming what little food remains, and hiring archers to hold back the ever-growing horde.
 
-## ✨ What It Does
-
-| What | How |
-|------|-----|
-| **🤖 AI Agent** | Hermes Agent (Nous Research) — DeepSeek V4 Flash, persistent memory, 150 max turns |
-| **💬 Discord Ops** | Free-response channels, per-channel prompts, threaded convos, auto-reactions |
-| **⏰ Cron Automation** | ~20 scheduled jobs — vault backups, wiki ingest, morning briefings, RSS, system health, study reminders |
-| **📜 Custom Scripts** | 12 Python/bash scripts for session export, inbox management, task processing, backup, sync monitoring |
-| **📚 Knowledge Mgmt** | Obsidian vault with automated wiki ingest, daily note processing, inbox pipeline, session archiving |
-| **🔧 Systemd Services** | 3 user services with auto-restart and graceful shutdown |
-| **🔗 Integrations** | Discord, n8n webhook, Google Workspace, Tailscale, Syncthing |
-| **🧠 Skills Library** | 900+ skills (cybersecurity, devops, creative, coding) auto-synced from community repos |
-
-## 📂 What's in Here
-
-```
-hermes-homelab/
-├── README.md                    # You are here
-├── config.yaml                  # Hermes Agent config (secrets redacted)
-├── SOUL.md                      # Agent personality definition
-├── services/                    # Systemd user service files
-│   ├── hermes-gateway.service
-│   ├── hermes-webui.service
-│   └── hermes-dashboard.service
-├── scripts/                     # Custom vault automation scripts
-│   ├── export-sessions.py       # Export Hermes sessions to vault
-│   ├── inbox-processor.py       # Archive/purge inbox items
-│   ├── inbox-reminder.py        # Weekly old-item reminder
-│   ├── logbook.py               # Vault change detection
-│   ├── rss-feeds.py             # RSS feed fetcher
-│   ├── syncthing-events.py      # Monitor Syncthing syncs
-│   ├── sys-status.sh            # System health report
-│   ├── task-processor.py        # Nightly task list rebuild
-│   ├── vault-backup.sh          # Git-based vault backup
-│   └── vault-wiki-diff.py       # Wiki content change detection
-├── cron/
-│   └── schedule.md              # Full cron schedule documentation
-├── discord/
-│   └── channel-prompts.md       # Discord channel behavior config
-├── skills/                      # Custom-authored skills
-│   └── dogfood/
-│       ├── SKILL.md
-│       └── references/
-└── vault-structure/
-    └── AGENTS.md                # Vault organization rules
-```
-
-## 🛠️ Tech Stack
-
-| Layer | What I Use |
-|-------|-----------|
-| **OS** | Fedora Linux 44 |
-| **AI Agent** | [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) |
-| **LLM** | DeepSeek V4 Flash |
-| **Vault** | Obsidian (Syncthing-synced) |
-| **Automation** | n8n, cron, custom Python/bash |
-| **Networking** | Tailscale (mesh VPN) |
-| **Orchestration** | systemd (user services) |
-| **Platform** | Discord, webhook |
-
-## 🔒 Security
-
-- All API keys, tokens, and secrets are **redacted** from this repo
-- `.env` and credential stores are **never committed**
-- `config.yaml` is a reference template — actual secrets use environment variables
-- Private vault content is excluded
+Survive. Upgrade. Endure.
 
 ---
 
-*Built from scratch, running 24/7 in a closet in Quarteira. Started as "let's see if I can make this work" and turned into the backbone of my digital life.*
+## What's In It
+
+- **Click-to-fight combat** -- tap enemies to deal damage
+- **Archer system** -- recruit and upgrade archers that fight automatically
+- **Resource management** -- collect Gold, Scrap, and Food
+- **Room unlocks** -- Storeroom, Farm, and more to expand your base
+- **Upgrade tree** -- improve scavenging, farming, combat damage, and more
+- **Auto-save** -- every 60 seconds and on app close (JSON-based)
+- **Android support**
+
+---
+
+## Built With
+
+- [Godot 4](https://godotengine.org/) -- game engine
+- GDScript -- scripting language
+
+---
+
+## Run It
+
+```bash
+git clone https://github.com/lel1guy/LastBastion.git
+```
+
+Open Godot 4 -> **Import** -> select `project.godot` -> **F5** to run.
+
+---
+
+## Project Structure
+
+```
+LastBastion/
++-- Assets/          # Sprites, animations, audio
++-- Scenes/          # Godot scene files (.tscn)
++-- Scripts/         # GDScript files
+|   +-- GameManager.gd   # Autoload -- global state & signals
+|   +-- Game.gd          # Main game scene logic
+|   +-- Mob.gd           # Base mob class
+|   +-- archer.gd        # Archer unit logic
+|   +-- arrow.gd         # Projectile logic
+|   +-- upgrade_item.gd  # Individual upgrade UI + logic
+|   +-- upgrades.gd      # Upgrades container
+|   +-- resources.gd     # Resource display UI
+|   +-- main.gd          # Entry point / scene switcher
++-- Save&Load.gd     # Autoload -- save/load system (JSON)
++-- project.godot
+```
+
+---
+
+## Roadmap
+
+- [ ] More mob types and stages
+- [ ] Prestige / reset system
+- [ ] Offline progression (idle income while closed)
+- [ ] Sound effects & background music
+- [ ] Animated UI feedback
+
+---
+
+## Status: Paused
+
+Core loop is playable (alpha milestone reached). Save/load works, upgrades work, archers auto-fight. Paused while I focus on other projects, but I'll come back for polish -- sound design, achievements, and balancing.
+
+---
+
+## License
+
+This project is currently unlicensed. All rights reserved.
