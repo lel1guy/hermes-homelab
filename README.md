@@ -1,87 +1,140 @@
-# Last Bastion
+# hermes-homelab
 
-> A post-apocalyptic medieval fantasy idle game built in Godot 4.x.
-> My second game -- first Godot project built from scratch, no tutorials.
+> Production-grade Hermes AI Agent homelab — Discord ops, automated knowledge management, cron pipelines, and systemd services running on Fedora Linux.
 
-Built by [@lel1guy](https://github.com/lel1guy) from Quarteira, Algarve, Portugal
-
----
-
-## The World
-
-The world has collapsed. Civilization is in ruins, overrun by skeletons, zombies, orcs, and demons. You are the **last bastion** -- managing a crumbling stronghold, scavenging for scraps, farming what little food remains, and hiring archers to hold back the ever-growing horde.
-
-Survive. Upgrade. Endure.
+Built by [@lel1guy](https://github.com/lel1guy) from Quarteira, Algarve, Portugal, running on KAIDO-01 in the Kakurega Sector homelab.
 
 ---
 
-## What's In It
+## Overview
 
-- **Click-to-fight combat** -- tap enemies to deal damage
-- **Archer system** -- recruit and upgrade archers that fight automatically
-- **Resource management** -- collect Gold, Scrap, and Food
-- **Room unlocks** -- Storeroom, Farm, and more to expand your base
-- **Upgrade tree** -- improve scavenging, farming, combat damage, and more
-- **Auto-save** -- every 60 seconds and on app close (JSON-based)
-- **Android support**
+This repository documents a real, running deployment of [Hermes Agent](https://hermes-agent.nousresearch.com) on a self-hosted Linux server. It covers configuration, automation scripts, systemd services, Discord integration, and Obsidian vault workflows — all managed through cron-driven pipelines.
+
+The homelab processes session exports, RSS feeds, vault backups, wiki updates, task tracking, and system health monitoring on a daily schedule.
 
 ---
 
-## Built With
+## Contents
 
-- [Godot 4](https://godotengine.org/) -- game engine
-- GDScript -- scripting language
+### Configuration
+
+| File | Purpose |
+|---|---|
+| `config.yaml` | Hermes Agent configuration (redacted for public — secrets in .env) |
+| `SOUL.md` | Agent personality definition (Karasu persona) |
+| `vault-structure/AGENTS.md` | Vault rules, folder roles, processing pipelines |
+
+### Automation Scripts
+
+All scripts live in `scripts/` and run on cron schedules:
+
+| Script | Purpose | Schedule |
+|---|---|---|
+| `export-sessions.py` | Export Hermes sessions to Obsidian vault | Every 30 min |
+| `inbox-processor.py` | Archive/purge inbox items by age | Daily 01:00 |
+| `inbox-reminder.py` | Remind about stale inbox items | Weekly Mon 09:00 |
+| `task-processor.py` | Rebuild task list from vault notes | Daily 22:30 |
+| `rss-feeds.py` | Fetch and file RSS feed articles | Every 2 hours |
+| `vault-backup.sh` | Backup vault to external storage | Daily 03:00 |
+| `vault-wiki-diff.py` | Detect and report wiki page changes | Every 6 hours |
+| `syncthing-events.py` | Process Syncthing sync events | On change |
+| `logbook.py` | Generate vault change log reports | Daily |
+| `sys-status.sh` | System health snapshot (disk, memory, uptime) | Every 30 min |
+| `feeds.json` | RSS feed configuration (5 sources: security, tech, engineering) | — |
+
+### Systemd Services
+
+Managed via `systemctl` on Fedora:
+
+| Service | Description |
+|---|---|
+| `hermes-gateway.service` | Hermes Agent gateway daemon (API endpoint) |
+| `hermes-dashboard.service` | Hermes web dashboard UI |
+| `hermes-webui.service` | Hermes web interface |
+
+### Discord Integration
+
+| Resource | Description |
+|---|---|
+| `discord/channel-prompts.md` | Channel-specific prompt definitions for 10 Discord channels |
+| `config.yaml` (discord section) | Channel ID config, auto-thread settings, history backfill |
+
+### Cron Jobs
+
+| Resource | Description |
+|---|---|
+| `cron/schedule.md` | Full cron schedule reference with job IDs and intervals |
+
+### Custom Skills
+
+| Skill | Description |
+|---|---|
+| `skills/dogfood/` | Dogfood QA skill — automated exploratory testing of web apps |
 
 ---
 
-## Run It
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| OS | Fedora Linux 41 |
+| Agent | Hermes Agent v0.16.0 |
+| LLM | DeepSeek V4 Flash |
+| Database | PostgreSQL 16 (local + Honcho memory layer) |
+| Automation | Python 3.11, Bash, systemd, cron |
+| Vault | Obsidian + Syncthing sync |
+| Integrations | Discord, RSS/Atom feeds |
+| Memory | Honcho (semantic memory layer) |
+
+---
+
+## Architecture
+
+```
+Discord ──> Hermes Gateway ──> LLM (DeepSeek) ──> Hermes Agent
+                          │                           │
+                          └──> cron jobs    ────> Obsidian Vault
+                                                ┌──── R|W
+                                                ▼
+                                          PostgreSQL
+                                          (Honcho + apps)
+```
+
+Daily pipelines:
+- **Session export** (every 30min) — save conversation history to vault
+- **Inbox processing** (daily 01:00) — archive/cleanse inbox items
+- **Task processing** (daily 22:30) — rebuild ToDo.md from all notes
+- **Knowledge extraction** (daily 20:00) — extract learnings from sessions to Knowledge/
+- **Wiki ingest** (daily 03:00) — process Knowledge/ into Wiki/
+- **RSS feeds** (every 2h) — pull articles from security/tech sources
+- **System health** (every 30min) — disk, memory, uptime monitoring
+
+---
+
+## Getting Started
+
+This repo is a reference/blueprint for your own Hermes Agent homelab. To adapt it:
 
 ```bash
-git clone https://github.com/lel1guy/LastBastion.git
-```
+# 1. Install Hermes Agent
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 
-Open Godot 4 -> **Import** -> select `project.godot` -> **F5** to run.
+# 2. Copy and adapt config
+cp config.yaml ~/.hermes/config.yaml
+# Edit: add your API keys, paths, Discord channel IDs
 
----
+# 3. Copy scripts
+cp -r scripts/ ~/.hermes/scripts/
 
-## Project Structure
+# 4. Set up systemd services (Linux)
+cp services/*.service /etc/systemd/system/
+systemctl daemon-reload
 
-```
-LastBastion/
-+-- Assets/          # Sprites, animations, audio
-+-- Scenes/          # Godot scene files (.tscn)
-+-- Scripts/         # GDScript files
-|   +-- GameManager.gd   # Autoload -- global state & signals
-|   +-- Game.gd          # Main game scene logic
-|   +-- Mob.gd           # Base mob class
-|   +-- archer.gd        # Archer unit logic
-|   +-- arrow.gd         # Projectile logic
-|   +-- upgrade_item.gd  # Individual upgrade UI + logic
-|   +-- upgrades.gd      # Upgrades container
-|   +-- resources.gd     # Resource display UI
-|   +-- main.gd          # Entry point / scene switcher
-+-- Save&Load.gd     # Autoload -- save/load system (JSON)
-+-- project.godot
+# 5. Configure cron jobs (see cron/schedule.md for reference)
 ```
 
 ---
 
-## Roadmap
+## Status
 
-- [ ] More mob types and stages
-- [ ] Prestige / reset system
-- [ ] Offline progression (idle income while closed)
-- [ ] Sound effects & background music
-- [ ] Animated UI feedback
-
----
-
-## Status: Paused
-
-Core loop is playable (alpha milestone reached). Save/load works, upgrades work, archers auto-fight. Paused while I focus on other projects, but I'll come back for polish -- sound design, achievements, and balancing.
-
----
-
-## License
-
-This project is currently unlicensed. All rights reserved.
+Running 24/7 on KAIDO-01 (Fedora 41, 16GB RAM, 2TB storage). Actively maintained — new scripts and automations added as the homelab evolves.
