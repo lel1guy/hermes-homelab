@@ -77,7 +77,7 @@ Managed via `systemctl` on Fedora:
 
 | Layer | Technology |
 |---|---|
-| OS | Fedora Linux 41 |
+| OS | Fedora Linux 44 |
 | Agent | Hermes Agent v0.16.0 |
 | LLM | DeepSeek V4 Flash |
 | Database | PostgreSQL 16 (local + Honcho memory layer) |
@@ -85,6 +85,19 @@ Managed via `systemctl` on Fedora:
 | Vault | Obsidian + Syncthing sync |
 | Integrations | Discord, RSS/Atom feeds |
 | Memory | Honcho (semantic memory layer) |
+
+---
+
+## Hardware
+
+| Component | Spec |
+|---|---|
+| Machine | KAIDO-01 (Kakurega Sector) |
+| CPU | Intel i5-6200U (4 cores) @ 2.30GHz |
+| RAM | 8 GB |
+| Storage | 240 GB SSD |
+| GPU | Intel HD Graphics 520 |
+| Network | Tailscale mesh (torii.net) |
 
 ---
 
@@ -137,4 +150,4 @@ systemctl daemon-reload
 
 ## Status
 
-Running 24/7 on KAIDO-01 (Fedora 41, 16GB RAM, 2TB storage). Actively maintained — new scripts and automations added as the homelab evolves.
+Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). Actively maintained — new scripts and automations added as the homelab evolves.
