@@ -80,7 +80,7 @@ Managed via `systemctl` on Fedora:
 | OS | Fedora Linux 44 |
 | Agent | Hermes Agent v0.16.0 |
 | LLM | DeepSeek V4 Flash |
-| Database | PostgreSQL 16 (local + Honcho memory layer) |
+| Database | PostgreSQL 18 (local + Honcho memory layer) |
 | Automation | Python 3.11, Bash, systemd, cron |
 | Vault | Obsidian + Syncthing sync |
 | Integrations | Discord, RSS/Atom feeds |
