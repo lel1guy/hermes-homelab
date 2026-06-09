@@ -1,38 +1,54 @@
 #!/usr/bin/env bash
-# sys-status.sh — System health snapshot
-# Runs every 4h via cron. Output to Discord #sys-status.
+# sys-status.sh — KAIDO Homelab health check
+# Intended as a no_agent cron job script, delivering to #sys-status.
+# Reports disk, memory, uptime, Tailscale, services.
+
 set -euo pipefail
 
-{
-  echo "🖥️ **KAIDO-01 Status — $(date '+%Y-%m-%d %H:%M')**"
-  echo ""
+HOST="$(hostname)"
+UPTIME="$(uptime -p 2>/dev/null || echo 'N/A')"
+LOAD="$(uptime 2>/dev/null | awk -F'load average:' '{print $2}' | xargs || echo 'N/A')"
+NOW="$(date '+%Y-%m-%d %H:%M:%S')"
 
-  echo "**Uptime:** $(uptime -p)"\
-  echo ""
+# ── Disk ──
+DISK="$(df -h / /home 2>/dev/null | awk 'NR>1 {printf "  %-12s %5s used / %5s (%s)\n", $1, $3, $2, $5}')"
 
-  echo "**Disk:**"
-  df -h / /home 2>/dev/null | tail -n +2 | while read -r line; do
-    echo "- $line"
-  done
-  echo ""
+# ── Memory ──
+MEM="$(free -h 2>/dev/null | awk '/Mem:/ {printf "  %-12s %5s used / %s\n", "RAM", $3, $2}')"
+SWAP="$(free -h 2>/dev/null | awk '/Swap:/ {printf "  %-12s %5s used / %s\n", "Swap", $3, $2}')"
 
-  echo "**Memory:**"
-  free -h | tail -n +2 | while read -r line; do
-    echo "- $line"
-  done
-  echo ""
+# ── Tailscale ──
+TS="$(tailscale status 2>/dev/null | head -10 || echo '  ⚠️  Not connected or tailscale not found')"
 
-  echo "**Services:**"
-  for svc in hermes-gateway hermes-webui syncthing; do
-    status=$(systemctl --user is-active "$svc" 2>/dev/null || echo "inactive")
-    icon="✅"
-    [ "$status" != "active" ] && icon="❌"
-    echo "- $icon $svc ($status)"
-  done
-  echo ""
-
-  if command -v tailscale &>/dev/null; then
-    echo "**Tailscale:**"
-    tailscale status 2>/dev/null | head -5 || echo "- not connected"
+# ── Services ──
+SVC_OUT=""
+for svc in hermes-gateway hermes-webui syncthing; do
+  if systemctl --user is-active "$svc" &>/dev/null 2>&1; then
+    SVC_OUT+="  ✅ $svc"$'\n'
+  else
+    SVC_OUT+="  ❌ $svc"$'\n'
   fi
-} 2>&1
+done
+
+# ── Output ──
+cat <<EOF
+🖥️ **KAIDO Homelab Health — $(date '+%A, %d %b %Y')**
+
+**Host:** $HOST
+**Uptime:** $UPTIME
+**Load:** $LOAD
+
+**💾 Disk:**
+$DISK
+
+**🧠 Memory:**
+${MEM}
+${SWAP}
+
+**📡 Tailscale:**
+$TS
+
+**✅ Services:**
+$SVC_OUT
+⏱️ Refreshed: $NOW
+EOF

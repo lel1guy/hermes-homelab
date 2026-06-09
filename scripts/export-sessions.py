@@ -13,7 +13,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-VAULT = Path(os.environ.get("OBSIDIAN_VAULT_PATH", os.path.expanduser("~/vault")))
+VAULT = Path(os.environ.get("OBSIDIAN_VAULT_PATH", "/home/vitor/vault"))
 INBOX = VAULT / "00-Inbox" / "Sessions"
 TRACKER_FILE = VAULT / "_hermes" / "Scripts" / ".session_export_tracker.json"
 
@@ -33,7 +33,7 @@ def get_hermes_sessions() -> list[dict]:
     """Export all sessions from Hermes as JSONL and extract messages."""
     result = subprocess.run(
         ["hermes", "sessions", "export", "/tmp/hermes_sessions_export.jsonl"],
-        capture_output=True, text=True, timeout=30
+        capture_output=True, text=True, timeout=120
     )
     if result.returncode != 0:
         print(f"ERROR: hermes sessions export failed: {result.stderr}", file=sys.stderr)
@@ -163,7 +163,7 @@ def make_session_note(session: dict) -> tuple[str, str]:
     ]
 
     if total_msgs:
-        lines.append(f"*{total_msgs} messages — {user_msgs} user, {asst_msgs} assistant*")
+        lines.append(f"*{total_msgs} mensagens — {user_msgs} suas, {asst_msgs} do Hermes*")
         lines.append("")
 
     lines.append("---")
@@ -174,6 +174,7 @@ def make_session_note(session: dict) -> tuple[str, str]:
         content = m.get("content") or ""
         timestamp = m.get("timestamp", "")
 
+        # Skip system/tool messages
         if role in ("tool", "system"):
             continue
 
@@ -184,7 +185,7 @@ def make_session_note(session: dict) -> tuple[str, str]:
                 ts_str = f" *({t.strftime('%H:%M:%S')})*"
 
         if role in ("user", "human"):
-            heading = f"### 👤 User{ts_str}"
+            heading = f"### 👤 Você{ts_str}"
         elif role in ("assistant", "agent"):
             heading = f"### 🤖 Hermes{ts_str}"
         else:
@@ -202,13 +203,14 @@ def make_session_note(session: dict) -> tuple[str, str]:
                 name = func.get("name", "unknown")
                 tools_used.append(name)
             if tools_used:
-                lines.append(f"> 🔧 *Tools: `{'`, `'.join(tools_used)}`*")
+                lines.append(f"> 🔧 *Ferramentas: `{'`, `'.join(tools_used)}`*")
                 lines.append("")
 
+        # Content — strip excessive whitespace
         if content:
             lines.append(content)
         else:
-            lines.append("*[empty]*")
+            lines.append("*[vazio]*")
 
         lines.append("")
 
@@ -221,12 +223,12 @@ def make_session_note(session: dict) -> tuple[str, str]:
             if duration:
                 total_min = int(duration.total_seconds() / 60)
                 if total_min > 0:
-                    dur_str = f" — duration: {total_min}min"
-            lines.append(f"*Session ended at {end_dt.strftime('%Y-%m-%d %H:%M')}{dur_str}*")
+                    dur_str = f" — duração: {total_min}min"
+            lines.append(f"*Sessão encerrada em {end_dt.strftime('%Y-%m-%d %H:%M')}{dur_str}*")
             lines.append("")
 
     lines.append("---")
-    lines.append(f"*Exported from `{sid}` on {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
+    lines.append(f"*Exportado de `{sid}` em {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
 
     return filename, "\n".join(lines)
 
@@ -266,6 +268,7 @@ def main():
         if not sid:
             continue
 
+        # Quality filter
         if not is_worth_exporting(session):
             skipped_count += 1
             continue
@@ -276,11 +279,14 @@ def main():
         record = exported.get(sid)
 
         if record:
+            # Already exported — only re-export if messages changed
             if record.get("message_count", 0) >= current_msg_count:
                 continue
+            # Messages grew — reuse tracked file path, overwrite it
             dest = VAULT / record["file"]
             updated_count += 1
         else:
+            # New session — generate filename with collision avoidance
             filename, content = make_session_note(session)
             dest = INBOX / filename
             counter = 1
@@ -291,8 +297,10 @@ def main():
 
         filename, content = make_session_note(session)
 
+        # Only write if content actually changed (content diff)
         existing_content = dest.read_text() if dest.exists() else None
         if existing_content == content:
+            # Same content despite message count change — still update tracker
             if sid in exported:
                 exported[sid]["message_count"] = current_msg_count
             continue
@@ -310,13 +318,14 @@ def main():
     tracker["total_exported"] = len(exported)
     save_tracker(tracker)
 
+    # Produce a meaningful summary when there's action
     parts = []
     if new_count > 0:
-        parts.append(f"{new_count} new")
+        parts.append(f"{new_count} nova(s)")
     if updated_count > 0:
-        parts.append(f"{updated_count} updated")
+        parts.append(f"{updated_count} atualizada(s)")
     if parts:
-        print(f"📥 {' + '.join(parts)} to 00-Inbox/ ({len(exported)} total, {skipped_count} skipped)")
+        print(f"📥 {' + '.join(parts)} em 00-Inbox/ ({len(exported)} total, {skipped_count} ignoradas)")
 
 
 if __name__ == "__main__":

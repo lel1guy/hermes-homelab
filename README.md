@@ -8,9 +8,9 @@ Built by [@lel1guy](https://github.com/lel1guy) from Quarteira, Algarve, Portuga
 
 ## Overview
 
-This repository documents a real, running deployment of [Hermes Agent](https://hermes-agent.nousresearch.com) on a self-hosted Linux server. It covers configuration, automation scripts, systemd services, Discord integration, and Obsidian vault workflows — all managed through cron-driven pipelines.
+This repository documents a real, running deployment of [Hermes Agent](https://hermes-agent.nousresearch.com) on a self-hosted Linux server. It covers configuration, automation scripts, Discord integration, and Obsidian vault workflows — all managed through cron-driven pipelines.
 
-The homelab processes session exports, RSS feeds, vault backups, wiki updates, task tracking, and system health monitoring on a daily schedule.
+The homelab processes session exports, RSS feeds, vault backups, wiki updates, task tracking, daily study podcasts, tech quizzes, and system health monitoring on a daily schedule.
 
 ---
 
@@ -19,64 +19,75 @@ The homelab processes session exports, RSS feeds, vault backups, wiki updates, t
 ### Configuration
 
 | File | Purpose |
-|---|---|
+|------|---------|
 | `config.yaml` | Hermes Agent configuration (redacted for public — secrets in .env) |
-| `SOUL.md` | Agent personality definition (Karasu persona) |
-| `vault-structure/AGENTS.md` | Vault rules, folder roles, processing pipelines |
+| `SOUL.md` | Agent personality definition (Karasu persona — 184 lines) |
+| `vault-structure/AGENTS.md` | Vault rules, folder roles, processing pipelines (203 lines) |
 
 ### Automation Scripts
 
 All scripts live in `scripts/` and run on cron schedules:
 
 | Script | Purpose | Schedule |
-|---|---|---|
+|--------|---------|----------|
 | `export-sessions.py` | Export Hermes sessions to Obsidian vault | Every 30 min |
 | `inbox-processor.py` | Archive/purge inbox items by age | Daily 01:00 |
 | `inbox-reminder.py` | Remind about stale inbox items | Weekly Mon 09:00 |
-| `task-processor.py` | Rebuild task list from vault notes | Daily 22:30 |
-| `rss-feeds.py` | Fetch and file RSS feed articles | Every 2 hours |
-| `vault-backup.sh` | Backup vault to external storage | Daily 03:00 |
+| `task-processor.py` | Rebuild task list from vault notes | Daily 23:00 |
+| `rss-feeds.py` | Fetch and file RSS feed articles | Every 4 hours |
+| `vault-backup.sh` | Backup vault to external storage | Daily 05:00 |
 | `vault-wiki-diff.py` | Detect and report wiki page changes | Every 6 hours |
-| `syncthing-events.py` | Process Syncthing sync events | On change |
-| `logbook.py` | Generate vault change log reports | Daily |
-| `sys-status.sh` | System health snapshot (disk, memory, uptime) | Every 30 min |
-| `feeds.json` | RSS feed configuration (5 sources: security, tech, engineering) | — |
+| `syncthing-events.py` | Process Syncthing sync events | Every 6 hours |
+| `logbook.py` | Generate vault change log reports | Every 6 hours |
+| `sys-status.sh` | System health snapshot (disk, memory, uptime) | Every 6 hours |
+| `ccna-processor.py` | Fetch YouTube transcripts → CCNA concept notes | On demand |
+| `feeds.json` | *(removed — feed sources now configurable in rss-feeds.py)* | — |
 
 ### Systemd Services
 
 Managed via `systemctl` on Fedora:
 
 | Service | Description |
-|---|---|
-| `hermes-gateway.service` | Hermes Agent gateway daemon (API endpoint) |
-| `hermes-dashboard.service` | Hermes web dashboard UI |
-| `hermes-webui.service` | Hermes web interface |
+|---------|-------------|
+| `services/hermes-gateway.service` | Hermes Agent gateway daemon (API endpoint) |
+| `services/hermes-dashboard.service` | Hermes web dashboard UI |
+| `services/hermes-webui.service` | Hermes web interface |
+
+> **Note:** Systemd services are optionally deployed. The homelab currently runs Hermes via the built-in scheduler, not system-level services.
 
 ### Discord Integration
 
 | Resource | Description |
-|---|---|
-| `discord/channel-prompts.md` | Channel-specific prompt definitions for 10 Discord channels |
+|----------|-------------|
+| `discord/channel-prompts.md` | Channel-specific prompt definitions for 9 Discord channels, including full `#hermes-knowledge` extraction workflow |
 | `config.yaml` (discord section) | Channel ID config, auto-thread settings, history backfill |
 
 ### Cron Jobs
 
 | Resource | Description |
-|---|---|
-| `cron/schedule.md` | Full cron schedule reference with job IDs and intervals |
+|----------|-------------|
+| `cron/schedule.md` | Full cron schedule reference — **21 active jobs** with job IDs, intervals, and categories |
 
-### Custom Skills
+### LLM-Driven Jobs (7)
 
-| Skill | Description |
-|---|---|
-| `skills/dogfood/` | Dogfood QA skill — automated exploratory testing of web apps |
+The scheduler runs 21 total jobs. 7 are LLM-driven (consume tokens):
+
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| Morning Briefing | Daily 08:00 | System health + tasks + stale item review |
+| Daily Study Podcast | Daily 08:00 | Audio podcast generation via edge-tts |
+| Study Plan — Daily Reminder | Daily 08:30 | Weekly study plan progress nudges |
+| Daily Tech Tutor Quiz | Daily 09:00 | Daily tech quiz question |
+| Daily Session Knowledge Extraction | Daily 20:00 | Extract learnings from recent sessions |
+| Nightly Note Processing | Daily 22:00 | Process user daily notes |
+| Weekly Stale Knowledge Check | Sun 22:00 | Audit Knowledge/ for stale/broken files |
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+|-------|-----------|
 | OS | Fedora Linux 44 |
 | Agent | Hermes Agent v0.16.0 |
 | LLM | DeepSeek V4 Flash |
@@ -91,7 +102,7 @@ Managed via `systemctl` on Fedora:
 ## Hardware
 
 | Component | Spec |
-|---|---|
+|-----------|------|
 | Machine | KAIDO-01 (Kakurega Sector) |
 | CPU | Intel i5-6200U (4 cores) @ 2.30GHz |
 | RAM | 8 GB |
@@ -105,22 +116,24 @@ Managed via `systemctl` on Fedora:
 
 ```
 Discord ──> Hermes Gateway ──> LLM (DeepSeek) ──> Hermes Agent
-                          │                           │
-                          └──> cron jobs    ────> Obsidian Vault
-                                                ┌──── R|W
-                                                ▼
-                                          PostgreSQL
-                                          (Honcho + apps)
+                         │                           │
+                         └──> cron jobs    ────> Obsidian Vault
+                                               ┌──── R|W
+                                               ▼
+                                         PostgreSQL
+                                         (Honcho + apps)
 ```
 
 Daily pipelines:
 - **Session export** (every 30min) — save conversation history to vault
 - **Inbox processing** (daily 01:00) — archive/cleanse inbox items
-- **Task processing** (daily 22:30) — rebuild ToDo.md from all notes
-- **Knowledge extraction** (daily 20:00) — extract learnings from sessions to Knowledge/
 - **Wiki ingest** (daily 03:00) — process Knowledge/ into Wiki/
-- **RSS feeds** (every 2h) — pull articles from security/tech sources
-- **System health** (every 30min) — disk, memory, uptime monitoring
+- **Task processing** (daily 23:00) — rebuild ToDo.md from all notes
+- **Knowledge extraction** (daily 20:00) — extract learnings from sessions to Knowledge/
+- **Study pipeline** (daily 08:00-09:30) — podcast, reminders, tech quizzes
+- **RSS feeds** (every 4h) — pull articles from security/tech sources
+- **System health** (every 6h) — disk, memory, uptime monitoring
+- **Weekly maintenance** (Sundays) — consolidation, stale checks, vault stats
 
 ---
 
@@ -139,7 +152,7 @@ cp config.yaml ~/.hermes/config.yaml
 # 3. Copy scripts
 cp -r scripts/ ~/.hermes/scripts/
 
-# 4. Set up systemd services (Linux)
+# 4. Set up systemd services (Linux, optional)
 cp services/*.service /etc/systemd/system/
 systemctl daemon-reload
 
@@ -150,4 +163,4 @@ systemctl daemon-reload
 
 ## Status
 
-Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). Actively maintained — new scripts and automations added as the homelab evolves.
+Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). **21 active cron jobs.** Actively maintained — new scripts and automations added as the homelab evolves.

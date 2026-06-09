@@ -1,125 +1,136 @@
 #!/usr/bin/env python3
-"""rss-feeds.py — Fetch RSS feeds and post new items to Discord.
+"""rss-feeds.py — Poll RSS feeds and output new items.
 
-Runs every 4h via cron (no_agent). Tracks seen GUIDs in state file.
-Only posts items not seen before. Silent when nothing new.
+State file: ~/.hermes/rss_state.json
+Config: vault/_hermes/Scripts/feeds.json
+Silent when nothing new (empty stdout = no delivery).
 """
 
 import json
 import os
-import re
-import urllib.request
-import urllib.error
-import xml.etree.ElementTree as ET
-from datetime import datetime
+import time
 from pathlib import Path
 
-STATE_FILE = Path(os.path.expanduser("~/.hermes/rss_state.json"))
-FEEDS_FILE = Path(os.path.expanduser("~/vault/_hermes/Scripts/feeds.json"))
+import feedparser
 
-USER_AGENT = "Hermes-RSS/1.0"
+CONFIG = Path(os.path.expanduser("~/vault/_hermes/Scripts/feeds.json"))
+STATE = Path(os.path.expanduser("~/.hermes/rss_state.json"))
+LIMIT_PER_FEED = 3  # max items per feed per poll
 
 
-def fetch_feed(url: str) -> str | None:
-    """Fetch an RSS/Atom feed."""
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def load_config():
+    with open(CONFIG) as f:
+        return json.load(f)
+
+
+def load_state():
+    if STATE.exists():
+        with open(STATE) as f:
+            return json.load(f)
+    return {"seen": {}, "last_run": 0}
+
+
+def save_state(state):
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    with open(STATE, "w") as f:
+        json.dump(state, f)
+
+
+def poll_feed(feed_info):
+    """Fetch a feed and return unpublished items."""
+    name = feed_info["name"]
+    url = feed_info["url"]
+    cat = feed_info.get("category", "misc")
+    state = load_state()
+    seen = state.get("seen", {})
+
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return resp.read().decode("utf-8", errors="replace")
+        feed = feedparser.parse(url)
     except Exception as e:
-        print(f"  ⚠️ Failed: {e}")
+        return [], f"  ⚠️ **{name}** — fetch error: {e}"
+
+    if feed.bozo and not feed.entries:
+        return [], f"  ⚠️ **{name}** — parse error: {feed.bozo_exception}"
+
+    new_items = []
+    for entry in feed.entries[:LIMIT_PER_FEED]:
+        guid = entry.get("id") or entry.get("link", "")
+        if guid in seen:
+            continue
+        seen[guid] = True
+        title = entry.get("title", "Untitled")
+        link = entry.get("link", "")
+        published = entry.get("published", "")
+        new_items.append({
+            "title": title,
+            "link": link,
+            "published": published,
+            "category": cat,
+            "feed": name,
+        })
+
+    if new_items:
+        state["seen"] = seen
+        save_state(state)
+
+    return new_items, None
+
+
+def format_items(items):
+    """Group items by category and format as markdown."""
+    if not items:
         return None
 
+    # Group
+    grouped = {}
+    for item in items:
+        cat = item["category"]
+        grouped.setdefault(cat, []).append(item)
 
-def parse_entries(xml_data: str) -> list[dict]:
-    """Parse RSS 2.0, Atom, or RDF feed, returns entries with guid, title, link."""
-    root = ET.fromstring(xml_data)
-    entries = []
+    emoji_map = {
+        "tech": "💻",
+        "ai": "🤖",
+        "gaming": "🎮",
+        "cybersecurity": "🔐",
+        "devtools": "🛠️",
+        "homelab": "🏠",
+        "misc": "📌",
+    }
 
-    # RSS 2.0
-    for item in root.iter("item"):
-        guid = item.findtext("guid") or item.findtext("link") or ""
-        entries.append({
-            "guid": guid.strip(),
-            "title": (item.findtext("title") or "(no title)").strip(),
-            "link": (item.findtext("link") or "").strip(),
-        })
+    lines = ["## 📡 Fresh from the feeds\n"]
+    for cat, cat_items in grouped.items():
+        emoji = emoji_map.get(cat, "📌")
+        cat_name = cat.capitalize()
+        lines.append(f"**{emoji} {cat_name}**")
+        for item in cat_items:
+            title = item["title"].replace("\\", "").replace("`", "'").replace("*", "·")
+            lines.append(f"  • [{title}]({item['link']})")
+            if item["published"]:
+                lines[-1] += f" — {item['published']}"
+        lines.append("")
 
-    # Atom
-    ns = {"atom": "http://www.w3.org/2005/Atom"}
-    for entry in root.iter("{http://www.w3.org/2005/Atom}entry"):
-        guid = entry.findtext("atom:id", "", ns) or ""
-        title_el = entry.find("atom:title", ns)
-        link_el = entry.find("atom:link", ns)
-        entries.append({
-            "guid": guid.strip(),
-            "title": (title_el.text or "(no title)").strip() if title_el is not None else "(no title)",
-            "link": (link_el.attrib.get("href", "") if link_el is not None else "").strip(),
-        })
-
-    return entries
+    lines.append("---")
+    return "\n".join(lines)
 
 
 def main():
-    FEEDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    config = load_config()
+    all_new = []
+    errors = []
 
-    if not FEEDS_FILE.exists():
-        print("No feeds.json found — skipping")
-        return
+    for feed in config["feeds"]:
+        new_items, err = poll_feed(feed)
+        if err:
+            errors.append(err)
+        all_new.extend(new_items)
 
-    feeds = json.loads(FEEDS_FILE.read_text())
-    if not isinstance(feeds, dict):
-        feeds = {"feeds": feeds}
+    output = format_items(all_new)
+    if output:
+        print(output)
 
-    state = {"seen": {}}
-    if STATE_FILE.exists():
-        try:
-            state = json.loads(STATE_FILE.read_text())
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    seen = state.get("seen", {})
-    new_items = []
-
-    for name, url in feeds.get("feeds", {}).items():
-        print(f"📡 {name}")
-        xml_data = fetch_feed(url)
-        if not xml_data:
-            continue
-        try:
-            entries = parse_entries(xml_data)
-        except ET.ParseError as e:
-            print(f"  ⚠️ Parse error: {e}")
-            continue
-
-        count = 0
-        for entry in entries:
-            if entry["guid"] and entry["guid"] not in seen:
-                seen[entry["guid"]] = datetime.now().isoformat()
-                new_items.append(entry)
-                count += 1
-
-        if count == 0:
-            print(f"  No new items")
-
-    # Save state
-    state["seen"] = seen
-    state["last_run"] = datetime.now().isoformat()
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2))
-
-    # Output new items
-    if new_items:
-        print(f"\n**📰 New RSS Items ({len(new_items)}):**")
-        for item in new_items[:15]:
-            title = item["title"]
-            link = item.get("link", "")
-            if link:
-                print(f"- [{title}]({link})")
-            else:
-                print(f"- {title}")
-        if len(new_items) > 15:
-            print(f"  _…and {len(new_items) - 15} more_")
+    if errors:
+        # Always output errors so we don't miss them silently
+        print("\n".join(errors))
 
 
 if __name__ == "__main__":

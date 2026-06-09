@@ -7,40 +7,43 @@ Hermes Agent integrates with Discord via the Gateway. Each channel has specific 
 | Channel | Type | Auto-Reply | Purpose |
 |---------|------|------------|---------|
 | `#hermes-chat` | Free-response | ✅ Yes | Main ops channel — everything auto-replies |
+| `#hermes-knowledge` | Free-response | ✅ Yes | Post content → auto-extracted to vault |
 | `#announcements` | Read-only | ❌ No | Cron job outputs, daily summaries, wiki updates |
 | `#sys-status` | Read-only | ❌ No | System health reports, uptime, service status |
 | `#logbook` | Read-only | ❌ No | Vault change detection logs |
 | `#general` | @mention only | ❌ Only when pinged | General conversation |
 | `#admin` | @mention only | ❌ Only when pinged | Config, status checks, slash commands |
-| `#wiki-ingest` | Free-response | ✅ Yes | Post content → auto-extracted to Wiki |
-| `#inbox` | Free-response | ✅ Yes | Post content → auto-filed to vault |
+| `#wiki-ingest` | Read-only | ❌ No | Wiki activity logs (cron output) |
 | `#dev` | Free-response | ✅ Yes | Technical discussion, code questions |
 
-## Channel Prompt Details
+## Free-Response Channels (Auto-Reply Without @Mention)
 
-### 🧠 Wiki Ingest (`#wiki-ingest`)
+### 🧠 Hermes Knowledge (`#hermes-knowledge`)
 When someone posts content (URLs, text, files, video links):
-1. Analyze everything — read URLs, transcribe YouTube links, read attached files
-2. Extract deep knowledge — understand concepts, connect ideas
-3. Route output:
-   - Wiki-worthy → create/update entity/concept pages in `/Wiki/`
-   - Knowledge guides → `/Knowledge/` with `[[wikilinks]]`
-   - Project-related → `/Projects/`
-4. Always use `[[wikilinks]]` to connect to existing notes
-5. Save raw copy to `00-Inbox/` as timestamped markdown
+1. ANALYZE everything — read URLs, transcribe YouTube links, read attached files, extract text from PDFs, examine code snippets
+2. Get IN-DEPTH knowledge — extract key concepts, insights, techniques, actionable information
+3. DETERMINE the right vault destination:
+   - Educational content / tutorials → `Knowledge/<topic>/` with `[[wikilinks]]`
+   - Code snippets / CLI commands → `Knowledge/Cheat Sheets/`
+   - Setup instructions / config → `Knowledge/Hermes/` or relevant topic
+   - Project ideas/seeds → `Jornal/Ideas/`
+   - Active project updates → `Projects/`
+   - Career/job stuff → `Jornal/Career/`
+   - Infrastructure/homelab → `Kakurega Sector/`
+   - Wiki-worthy topics → `Wiki/` (create/update entity or concept page)
+   - Research / reference → `Knowledge/` as standalone note
+   - Time-based captures → `Jornal/Daily/YYYY-MM-DD.md`
+4. Always read existing notes first — NO duplicates
+5. Notes must be EVERGREEN — no "today", "yesterday", "in this article" references
+6. Use `[[wikilinks]]` to connect to related vault notes
+7. Save raw copy to `00-Inbox/` for archival
+8. Post summary of what was extracted, created, and where it was filed
 
-### 📥 Inbox (`#inbox`)
-When someone posts content:
-1. Analyze everything — read URLs, transcribe video, read attached files
-2. Determine the right vault destination:
-   - Knowledge/guides → `/Knowledge/`
-   - Project ideas → `/Jornal/Ideas/`
-   - Infrastructure → `/Kakurega Sector/`
-   - Wiki-worthy → `/Wiki/`
-   - Time-based → `/Jornal/Daily/YYYY-MM-DD.md`
-   - General → `/Knowledge/General/`
-3. Create well-structured note with proper headings and links
-4. Save raw copy to `00-Inbox/`
+### 🤖 Hermes Chat (`#hermes-chat`)
+Free-response ops channel. Respond to ALL messages here automatically without requiring @mention.
+
+### 💻 Dev (`#dev`)
+Technical discussion channel. Focus on code, commands, and architecture. Be concise.
 
 ## Key Discord Config Settings
 

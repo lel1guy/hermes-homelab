@@ -9,6 +9,8 @@
 model:
   default: deepseek-v4-flash
   provider: deepseek
+  base_url: https://api.deepseek.com/v1
+  api_key: <redacted>
 
 # ── Agent ──────────────────────────────────────────────────────
 agent:
@@ -18,15 +20,10 @@ agent:
   tool_use_enforcement: auto
   task_completion_guidance: true
   environment_probe: true
-  reasoning_effort: medium
+  reasoning_effort: max
   clarify_timeout: 600
   gateway_notify_interval: 180
   gateway_auto_continue_freshness: 3600
-
-# ── Personalities ──────────────────────────────────────────────
-# Available: helpful, concise, technical, creative, teacher,
-#   kawaii, catgirl, pirate, shakespeare, surfer, noir,
-#   uwu, philosopher, hype
 
 # ── Terminal ───────────────────────────────────────────────────
 terminal:
@@ -48,42 +45,62 @@ browser:
 memory:
   memory_enabled: true
   user_profile_enabled: true
-  provider: hindsight
+  provider: honcho
   memory_char_limit: 2200
   user_char_limit: 1375
   nudge_interval: 10
   flush_min_turns: 6
+
+# ── Honcho ─────────────────────────────────────────────────────
+honcho:
+  base_url: http://localhost:8000
+  workspace: hermes-memory
 
 # ── Delegation ─────────────────────────────────────────────────
 delegation:
   max_iterations: 50
   child_timeout_seconds: 600
   max_concurrent_children: 3
+  max_spawn_depth: 1
+  orchestrator_enabled: true
 
 # ── Skills ─────────────────────────────────────────────────────
 skills:
   external_dirs: '["/home/*/vault/_hermes/Skills"]'
   template_vars: true
 
+# ── Curator ────────────────────────────────────────────────────
+curator:
+  enabled: true
+  interval_hours: 168      # Weekly
+  stale_after_days: 30
+  archive_after_days: 90
+
 # ── Discord ────────────────────────────────────────────────────
 discord:
   require_mention: true
-  free_response_channels:
-    - home             # Hermes chat — auto-replies to everything
-    - wiki-ingest      # Wiki content channel
-    - inbox            # Knowledge capture channel
+  free_response_channels:  # Channel IDs
+    - <home_channel_id>       # Hermes chat
+    - <hermes_knowledge_id>   # Knowledge capture
   auto_thread: true
+  thread_require_mention: false
+  history_backfill: true
+  history_backfill_limit: 50
   reactions: true
   channel_prompts:
-    wiki-ingest: "Process posted content → Wiki or Knowledge"
-    inbox: "Analyze posted content → file to appropriate vault folder"
+    hermes-knowledge: >
+      Knowledge extraction channel. Full extraction workflow:
+      analyze URLs → transcribe YouTube → read files → file to vault.
+    hermes-chat: "Free-response channel. Respond to ALL messages without @mention."
+    announcements: "Read-only — daily summaries, wiki updates, cron outputs."
+    sys-admin: "Read-only — system health reports."
+    logbook: "Read-only — vault change logs."
     dev: "Focus on technical answers. Be concise."
-    announcements: "Read-only — daily summaries, cron outputs"
-    hermes-chat: "Free-response — auto-reply without @mention"
-    sys-admin: "Read-only — system health reports"
-    logbook: "Read-only — vault change logs"
+    general: "Only respond when @mentioned."
+    admin: "Config, status checks, and slash commands."
+    wiki-ingest: "Read-only — wiki activity logs."
 
-# ── Webhook (n8n integration) ──────────────────────────────────
+# ── Platforms ──────────────────────────────────────────────────
 platforms:
   webhook:
     enabled: true
@@ -94,8 +111,6 @@ platforms:
 # ── Dashboard ──────────────────────────────────────────────────
 dashboard:
   theme: default
-  basic_auth:
-    username: "kaido-dt"
 
 # ── Voice / TTS ────────────────────────────────────────────────
 tts:
@@ -120,11 +135,30 @@ mcp_servers:
     command: codegraph
     args: ["serve", "--mcp"]
     enabled: true
+  deepwiki:
+    url: https://mcp.deepwiki.com/mcp
+    enabled: true
   github:
     url: "https://api.githubcopilot.com/mcp/"
     headers:
       Authorization: "Bearer ${MCP_GITHUB_TOKEN}"
     enabled: true
+  open-notebook:
+    command: uvx
+    args: ["open-notebook-mcp"]
+    enabled: true
+
+# ── Plugins ────────────────────────────────────────────────────
+plugins:
+  enabled:
+    - disk-cleanup
+    - obsidian-context-bridge
+
+# ── X Search ───────────────────────────────────────────────────
+x_search:
+  model: grok-4.20-reasoning
+  timeout_seconds: 180
+  retries: 2
 
 # ── Fallback Model ─────────────────────────────────────────────
 # Uncomment to enable:
@@ -139,8 +173,9 @@ mcp_servers:
 |---------|-------|-----|
 | `agent.max_turns` | 150 | Long-running tasks need room to iterate |
 | `sessions.auto_prune` | `false` | Never lose conversation history |
-| `discord.free_response_channels` | 3 channels | Hermes auto-replies in ops channels without @mention |
+| `discord.free_response_channels` | 2 channels | Hermes auto-replies in ops channels without @mention |
 | `discord.auto_thread` | `true` | Every message spawns a thread — keeps discussions organized |
 | `terminal.cwd` | vault | Default working directory is the Obsidian vault |
 | `skills.external_dirs` | vault Skills/ | Skills from vault mirror are auto-discovered |
-| `memory.memory_enabled` | `true` | Persistent cross-session memory |
+| `memory.provider` | honcho | Semantic memory layer with PostgreSQL backend |
+| `curator.enabled` | `true` | Automatic stale skill cleanup runs weekly |
