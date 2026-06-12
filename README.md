@@ -163,4 +163,4 @@ systemctl daemon-reload
 
 ## Status
 
-Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). **21 active cron jobs.** Actively maintained — new scripts and automations added as the homelab evolves.
+Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). **21 active cron jobs.** Also hosts Honcho (AI memory layer with pgvector) and Open Notebook (AI research notebook) as sibling Docker Compose stacks. See [lel1guy/homelab](https://github.com/lel1guy/homelab) for the full infrastructure overview. Actively maintained — new scripts and automations added as the homelab evolves.
