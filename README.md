@@ -9,7 +9,6 @@ Built by [@lel1guy](https://github.com/lel1guy) from Quarteira, Algarve, Portuga
 ## Overview
 
 This repository documents a real, running deployment of [Hermes Agent](https://hermes-agent.nousresearch.com) on a self-hosted Linux server. It covers configuration, automation scripts, Discord integration, and Obsidian vault workflows — all managed through cron-driven pipelines.
-
 The homelab processes session exports, RSS feeds, vault backups, wiki updates, task tracking, daily study podcasts, tech quizzes, and system health monitoring on a daily schedule.
 
 ---
@@ -66,11 +65,11 @@ Managed via `systemctl` on Fedora:
 
 | Resource | Description |
 |----------|-------------|
-| `cron/schedule.md` | Full cron schedule reference — **21 active jobs** with job IDs, intervals, and categories |
+| `cron/schedule.md` | Full cron schedule reference — **17 active jobs** with job IDs, intervals, and categories |
 
 ### LLM-Driven Jobs (7)
 
-The scheduler runs 21 total jobs. 7 are LLM-driven (consume tokens):
+The scheduler runs 17 total jobs. 7 are LLM-driven (consume tokens):
 
 | Job | Schedule | Purpose |
 |-----|----------|---------|
@@ -89,8 +88,8 @@ The scheduler runs 21 total jobs. 7 are LLM-driven (consume tokens):
 | Layer | Technology |
 |-------|-----------|
 | OS | Fedora Linux 44 |
-| Agent | Hermes Agent v0.16.0 |
-| LLM | DeepSeek V4 Flash |
+| Agent | Hermes Agent v0.17.0 |
+| LLM | DeepSeek V4 Pro |
 | Database | PostgreSQL 18 (local + Honcho memory layer) |
 | Automation | Python 3.11, Bash, systemd, cron |
 | Vault | Obsidian + Syncthing sync |
@@ -163,4 +162,4 @@ systemctl daemon-reload
 
 ## Status
 
-Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). **21 active cron jobs.** Also hosts Honcho (AI memory layer with pgvector) and Open Notebook (AI research notebook) as sibling Docker Compose stacks. See [lel1guy/homelab](https://github.com/lel1guy/homelab) for the full infrastructure overview. Actively maintained — new scripts and automations added as the homelab evolves.
+Running 24/7 on KAIDO-01 (Fedora 44, 8GB RAM, 240GB SSD). **17 active cron jobs.** Also hosts Honcho (AI memory layer with pgvector) and Open Notebook (AI research notebook) as sibling Docker Compose stacks. See [lel1guy/homelab](https://github.com/lel1guy/homelab) for the full infrastructure overview. Actively maintained — new scripts and automations added as the homelab evolves.
